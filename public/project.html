@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html ng-app="app">
+<head>
+	<title>Boards</title>
+	<link rel="stylesheet" type="text/css" href="css/lumx.css">
+	<link href="css/materialdesignicons.min.css" media="all" rel="stylesheet" type="text/css" >
+
+
+	<script src="js/jquery-2.1.3.js"></script>
+	<script src="js/jquery-ui.js"></script>
+	<script src="js/angular.min.js"></script>
+	<script src="js/velocity.js"></script>
+	<script src="js/moment_with_locales.js"></script>
+	<script src="js/jquery.shapeshift.min.js"></script>
+	<script src="js/lumx.js"></script>
+
+	<script src="js/app.js"></script>
+
+
+	<style>
+	    .container {
+	      position: relative;
+	    }
+
+	    .container > div {
+	      position: absolute;
+	      cursor: pointer;
+	      height: auto;
+	      width: 90%;
+	    }
+
+	    .container > .ss-placeholder-child {
+	      background: gray;
+	      opacity: 0.4;
+	      border-radius: 3px;
+	    }
+
+	    .container > .ss-dragged-child {
+	    -ms-transform: rotate(10deg); /* IE 9 */
+	    -webkit-transform: rotate(10deg); /* Safari */
+	    -o-transform: rotate(10deg); /* Opera */
+	    transform: rotate(10deg);
+
+	    }
+
+		.listContainer {
+	      position: relative;
+	    }
+
+	    .listContainer > div {
+	      position: absolute;
+		  height: auto;
+	    }
+
+
+	    .listContainer > .ss-placeholder-child {
+	      background: transparent;
+	      border: 1px dashed black;
+	    }
+
+	    body {
+	    	overflow-y: hidden;
+	    }
+		
+
+	    #layout {
+	    	padding-top: 80px;
+	    	padding-left: 20px;
+			height: 100vh;
+			overflow: hidden;
+	    }
+
+	    .header {
+	    	height: 50px;
+	    	width: 100vw;
+	    	position: fixed;
+	    	top: 0px;
+	    	left: 0px;
+	    	padding: 6px;
+	    }
+
+	    .settings_panel {
+			width: 100vw;
+			position: fixed;
+			left: 0px;
+			top: 50px;
+			padding: 10px;
+	    }
+	
+	    .left_sidebar {
+			z-index: 1000;
+			position: fixed;
+			left: 5px;
+			top: 55px; 
+			display: none;
+	    }
+
+	    .left_sidebar > div {
+	    	width: 320px;
+	        height: 85vh;
+	    }
+
+	    .right_sidebar {
+			z-index: 1000;
+			position: fixed;
+			right: 5px;
+			top: 55px; 
+			display: none;
+	    }
+
+	    .right_sidebar > div {
+	    	width: 250px;
+	        height: 85vh;
+	    }
+
+    </style>
+
+  <!-- Javascript -->
+<script>
+    $(document).ready(function() {
+
+
+		var containerSettings = {
+		    enableDrag: true
+		};
+
+		var listContainerSettings = {
+			enableDrag: true,
+			align: 'left'
+		}
+
+
+		//var $listContainer = $(".listContainer").shapeshift(listContainerSettings);
+		//$(".listContainer").trigger('ss-destroy');
+		//var $container = $(".container").shapeshift(containerSettings);
+		//$(".container").trigger('ss-destroy');
+		//$listContainer = $(".listContainer").shapeshift(listContainerSettings);
+
+		/*
+		$listContainer.on('click', function(e) {
+			console.log("message");
+
+			$(".listContainer").trigger('ss-destroy');
+			$container = $(".container").shapeshift(containerSettings);
+
+			//$(".container").trigger('ss-destroy');
+			//$listContainer = $(".listContainer").shapeshift(listContainerSettings);
+		});
+		*/
+		/*
+		$container.on('ss-drop-complete', function(e){
+			//$(".listContainer").trigger('ss-destroy');
+			//$container = $(".container").shapeshift(containerSettings);
+			recalcHeight();
+		});
+		
+		function recalcHeight () {
+			$('.container').each(function () {
+				var total_height = 0;
+				var last_height = $(this).height();
+				$(this).children().each(function () {
+					total_height += $(this).height();
+					total_height += 10;
+				});
+				if(last_height-total_height>40&&total_height!=0){
+					console.log(last_height + "!=" + total_height);
+					$(this).height(total_height);
+					$(window).resize();
+				}
+
+			});
+		}
+
+		
+		recalcHeight();
+		*/
+    })
+ </script>
+</head>
+<body ng-controller="myCtrl">
+
+<div class="header bgc-grey-600" style="text-align: center;">
+	<button style="float: left;" class="btn btn--m btn--grey btn--raised" ng-click="toggleBoards()" lx-ripple><i class="mdi mdi-view-list"></i>&nbsp;Проекты</button>
+	<span class="fs-headline tc-grey-400">BOARDS</span>
+
+	<div style="float: right;">
+		<button class="btn btn--m btn--white btn--icon" lx-ripple><i class="mdi mdi-plus"></i></button>
+		<button class="btn btn--m btn--grey btn--raised" lx-ripple>&nbsp;Влад Можайский</button>
+	</div>
+</div>
+
+<div id="layout" class="bgc-grey-500">
+
+<div class="settings_panel">
+	<div class="switch" style="width: 60px; float: left;">
+	    <input type="checkbox" id="switch1" class="switch__input" ng-click="toggleSwitch()">
+	    <label for="switch1" class="switch__label"><i class="icon icon--xs icon--white icon--flat mdi mdi-lock-open-outline"></i></label>
+	</div>
+	<div style="text-align: right;">
+		<button class="btn btn--xs btn--white btn--flat" ng-click="toggleRightMenu()" lx-ripple><i class="mdi mdi-chevron-left"></i> показать меню</button>
+	</div>
+</div>
+
+<!-- LEFT SIDEBAR -->
+<div class="left_sidebar">
+	<div class="card" >
+
+		<div style="padding-right: 30px; position: relative; left: 0px; top: 0px;">
+			<lx-text-field label="Название проекта" fixed-label="true" icon="magnify">
+	            <input type="text" ng-model="textFields.fixedFirstName">
+	        </lx-text-field>
+	    </div>
+	    <div style="position: absolute; left: 90%; top: -5px;">
+			<button class="btn btn--m btn--grey btn--icon" ng-click="toggleBoards()" lx-ripple><i class="mdi mdi-close"></i></button>
+		</div>
+		
+		<!-- BOARDS -->
+		<span class="fs-subhead tc-blue-400 display-block" style="text-align: center;">Мои проекты</span>
+		<div class="divider divider--dark"></div>
+
+		<!-- ITEMS -->
+		<div style="max-height: 80%;" lx-scrollbar>
+			<div class="p+">
+				<button class="btn btn--m btn--{{board.color}} btn--raised" style="width: 100%;" lx-ripple ng-repeat-start="board in boards">{{board.title}}</button>
+				<div class="divider divider--dark" style="margin: 5px;" ng-repeat-end></div>
+			</div>
+		</div>
+
+	</div>
+</div>
+
+<!-- RIGHT SIDEBAR -->
+<div class="right_sidebar">
+	<div class="card">
+
+	</div>
+</div>
+
+<div class="listContainer">
+	<!-- ONE COLUMN -->
+    <div style="width:300px;" class="draggableList" ng-repeat="list in lists" ng-if="list.title != ''">
+        <div class="card bgc-grey-300 myclass">
+        	<div class="toolbar__right" style="position: absolute; margin-left: 88%;">
+	            <lx-dropdown position="left" from-top>
+	                <button class="btn btn--m btn--grey btn--icon" lx-ripple lx-dropdown-toggle>
+	                    <i class="mdi mdi-chevron-down"></i>
+	                </button>
+
+	                <lx-dropdown-menu class="bgc-grey-400">
+	                    <ul >
+	                    	<li><a class="dropdown-link dropdown-link--is-header">Выберите действие</a></li>
+	                    	<li class="dropdown-divider"></li>
+	                        <li><a class="dropdown-link">Добавить карточку</a></li>
+	                        <li><a class="dropdown-link" ng-click="removeList(list._id)">Удалить список</a></li>
+	                    </ul>
+	                </lx-dropdown-menu>
+	            </lx-dropdown>
+	        </div>
+            <div style="padding: 8px;">
+                <strong class="fs-headline display-block">{{list.title}}</strong>
+                <span class="fs-subhead tc-black-2 display-block" style="line-height: 16px;">{{list.desc}}</span>
+                <div>
+			        <!-- COLUMN CARDS -->
+			    	
+
+					<div style="max-height: 60vh;" lx-scrollbar>
+						<div class="container bgc-grey-300">
+						 	<!-- ONE CARD -->
+						 	
+						    <div class="card" ng-repeat="card in list.cards">
+						    		<div class="toolbar__right" style="position: absolute; margin-left: 88%;">
+							            <lx-dropdown position="right" from-top>
+							                <button class="btn btn--s btn--grey btn--icon" lx-ripple lx-dropdown-toggle>
+							                    <i class="mdi mdi-pencil"></i>
+							                </button>
+
+							                <lx-dropdown-menu  class="bgc-grey-400">
+							                    <ul >
+							                        <li><a class="dropdown-link">Пользователи</a></li>
+							                        <li><a class="dropdown-link">Установить дату</a></li>
+							                        <li class="dropdown-divider"></li>
+							                        <li><a class="dropdown-link" ng-click="deleteCard(card._id)">Удалить</a></li>
+							                    </ul>
+							                </lx-dropdown-menu>
+							            </lx-dropdown>
+							        </div>
+			    	            <div style="padding: 8px;">
+					
+					                <span class="fs-subhead tc-black-1 display-block" style="line-height: 16px; width: 88%;">{{card.desc}}</span>
+					                <div class="tc-grey-400">
+										<i class="mdi mdi-format-list-bulleted" style="margin-right: 8px;"></i>
+										<i class="mdi mdi-comment-multipe-outline"></i> {{card.comment_count}}
+						            </div>
+					            </div>
+						    </div>
+						    <div class="needToRemove"></div>
+						 	
+						</div>
+					</div>
+					
+                </div>
+                <div style="margin-top: -15px; padding-left: 8px; padding-right: 8px;">
+					<div flex-container="row" >
+					    <div flex-item>
+					        <lx-text-field label="Новая карточка">
+					            <input type="text" id="input_{{list._id}}" ng-model="cardName" ng-focus="showBut($index)">
+					        </lx-text-field>
+					        <button id="addButton_{{$index}}" ng-click="addNewCard(list._id)" style="display:none;" class="btn btn--s btn--blue btn--raised" lx-ripple>ДОБАВИТЬ</button>
+					        <button style="display:none;" class="btn btn--m btn--blue btn--icon" lx-ripple ng-click="hideBut($index)"><i class="mdi mdi-close"></i></button>
+					    </div>
+					</div>
+	            </div>
+            </div>
+        </div>
+    </div>
+    		
+
+	</div>
+	<!-- EMPTY LIST -->
+	        <div id="addListMenu" class="card bgc-grey-600" style="float: left; margin-left: 25px; width: 300px; position: absolute; left: 800px; top: 90px;" >
+	        	<div style="margin-top: -15px; padding-left: 8px; padding-right: 8px;">
+					<div flex-container="row" >
+					    <div flex-item>
+					        <lx-text-field label="Новая карточка" theme="dark">
+					            <input id="newList" ng-model="newList" type="text" ng-focus="showBut(-1)" >
+					        </lx-text-field>
+					        <button id="addButton_-1" style="display:none;" ng-click="addList()" class="btn btn--s btn--blue btn--raised" lx-ripple>ДОБАВИТЬ</button>
+					        <button style="display:none;" class="btn btn--m btn--blue btn--icon" lx-ripple ng-click="hideBut(-1)"><i class="mdi mdi-close"></i></button>
+					    </div>
+					</div>
+	            </div>
+	        </div>
+</div>
+
+</body>
+</html>
+
+
+
+
