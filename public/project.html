@@ -54,8 +54,8 @@
 
 
 	    .listContainer > .ss-placeholder-child {
-	      background: transparent;
-	      border: 1px dashed black;
+	     	background: grey;
+	     	opacity: 0.25;
 	    }
 
 	    body {
@@ -114,82 +114,20 @@
 	    }
 
     </style>
-
-  <!-- Javascript -->
-<script>
-    $(document).ready(function() {
-
-
-		var containerSettings = {
-		    enableDrag: true
-		};
-
-		var listContainerSettings = {
-			enableDrag: true,
-			align: 'left'
-		}
-
-
-		//var $listContainer = $(".listContainer").shapeshift(listContainerSettings);
-		//$(".listContainer").trigger('ss-destroy');
-		//var $container = $(".container").shapeshift(containerSettings);
-		//$(".container").trigger('ss-destroy');
-		//$listContainer = $(".listContainer").shapeshift(listContainerSettings);
-
-		/*
-		$listContainer.on('click', function(e) {
-			console.log("message");
-
-			$(".listContainer").trigger('ss-destroy');
-			$container = $(".container").shapeshift(containerSettings);
-
-			//$(".container").trigger('ss-destroy');
-			//$listContainer = $(".listContainer").shapeshift(listContainerSettings);
-		});
-		*/
-		/*
-		$container.on('ss-drop-complete', function(e){
-			//$(".listContainer").trigger('ss-destroy');
-			//$container = $(".container").shapeshift(containerSettings);
-			recalcHeight();
-		});
-		
-		function recalcHeight () {
-			$('.container').each(function () {
-				var total_height = 0;
-				var last_height = $(this).height();
-				$(this).children().each(function () {
-					total_height += $(this).height();
-					total_height += 10;
-				});
-				if(last_height-total_height>40&&total_height!=0){
-					console.log(last_height + "!=" + total_height);
-					$(this).height(total_height);
-					$(window).resize();
-				}
-
-			});
-		}
-
-		
-		recalcHeight();
-		*/
-    })
- </script>
 </head>
 <body ng-controller="myCtrl">
 
-<div class="header bgc-grey-600" style="text-align: center;">
-	<button style="float: left;" class="btn btn--m btn--grey btn--raised" ng-click="toggleBoards()" lx-ripple><i class="mdi mdi-view-list"></i>&nbsp;Проекты</button>
-	<span class="fs-headline tc-grey-400">BOARDS</span>
+<div class="header bgc-{{project_color}}-600" style="text-align: center;">
+	<button style="float: left;" class="btn btn--m btn--{{project_color}} btn--raised" ng-click="toggleBoards()" lx-ripple><i class="mdi mdi-view-list"></i>&nbsp;Проекты</button>
+	<span class="fs-headline tc-{{project_color}}-200">BOARDS</span>
 
 	<div style="float: right;">
 		<button class="btn btn--m btn--white btn--icon" lx-ripple><i class="mdi mdi-plus"></i></button>
-		<button class="btn btn--m btn--grey btn--raised" lx-ripple>&nbsp;Влад Можайский</button>
+		<button class="btn btn--m btn--{{project_color}} btn--raised" lx-ripple>&nbsp;{{user_name}}</button>
 	</div>
 </div>
 
-<div id="layout" class="bgc-grey-500">
+<div id="layout" class="bgc-{{project_color}}-400">
 
 <div class="settings_panel">
 	<div class="switch" style="width: 60px; float: left;">
@@ -221,7 +159,7 @@
 		<!-- ITEMS -->
 		<div style="max-height: 80%;" lx-scrollbar>
 			<div class="p+">
-				<button class="btn btn--m btn--{{board.color}} btn--raised" style="width: 100%;" lx-ripple ng-repeat-start="board in boards">{{board.title}}</button>
+				<button class="btn btn--m btn--{{board.color}} btn--raised" style="width: 100%;" lx-ripple ng-repeat-start="board in boards" ng-click="GoToProject(board._id)">{{board.title}}</button>
 				<div class="divider divider--dark" style="margin: 5px;" ng-repeat-end></div>
 			</div>
 		</div>
@@ -267,7 +205,7 @@
 						<div class="container bgc-grey-300">
 						 	<!-- ONE CARD -->
 						 	
-						    <div class="card" ng-repeat="card in list.cards">
+						    <div class="card" ng-repeat="card in list.cards" ng-click="OpenCard(card._id)">
 						    		<div class="toolbar__right" style="position: absolute; margin-left: 88%;">
 							            <lx-dropdown position="right" from-top>
 							                <button class="btn btn--s btn--grey btn--icon" lx-ripple lx-dropdown-toggle>
@@ -331,6 +269,71 @@
 	            </div>
 	        </div>
 </div>
+
+
+
+
+
+<!-- OPEN CARD DIALOG -->
+<lx-dialog class="dialog dialog--l" id="card" auto-close="true" onclose="closingDialog()" onscrollend="scrollEndDialog()">
+    <div class="dialog__header">
+        <div class="toolbar bgc-light-blue-500 pl++">
+            <span class="toolbar__label tc-white fs-title">
+                {{card_info.desc}}
+            </span>
+
+            <div class="toolbar__right">
+                <button class="btn btn--l btn--white btn--icon" lx-ripple lx-dialog-close>
+                    <i class="mdi mdi-close"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="dialog__content bgc-grey-300" style="position: relative;">
+		<div style="position:absolute;right:0px;top:0px; width: 35%;" flex-container="column">
+			<span class="fs-subhead display-block tc-grey-500" style="text-align: center;">Добавить</span>
+			<button style="margin: 5px auto; width: 80%; text-align: left;" class="btn btn--m btn--white btn--raised tc-grey-700" lx-ripple><i style="float: left;margin-left: 5px;" class="icon icon--s icon--grey icon--flat mdi mdi-account-multiple"></i><b>&nbsp;&nbsp;&nbsp;Пользователи</b></button>
+			<button style="margin: 5px auto; width: 80%; text-align: left;" class="btn btn--m btn--white btn--raised tc-grey-700" lx-ripple><i style="float: left;margin-left: 5px;" class="icon icon--s icon--grey icon--flat mdi mdi-format-list-bulleted"></i><b>&nbsp;&nbsp;&nbsp;Списки</b></button>
+			<button style="margin: 5px auto; width: 80%; text-align: left;" class="btn btn--m btn--white btn--raised tc-grey-700" lx-ripple><i style="float: left;margin-left: 5px;" class="icon icon--s icon--grey icon--flat mdi mdi-timer"></i><b>&nbsp;&nbsp;&nbsp;Дату</b></button>
+			<span class="fs-subhead display-block tc-grey-500" style="text-align: center;">Действия</span>
+			<button style="margin: 5px auto; width: 80%; text-align: left;" class="btn btn--m btn--white btn--raised tc-grey-700" lx-ripple><i style="float: left;margin-left: 5px;" class="icon icon--s icon--grey icon--flat mdi mdi-delete"></i><b>&nbsp;&nbsp;&nbsp;Удалить</b></button>
+		</div>
+        <div class="p++" flex-container="row" flex-gutter="24">
+        	<span class="fs-title display-block tc-grey-700">Описание</span>
+		</div>
+		<div class="p++" flex-container="row" flex-gutter="24">
+        	<span class="fs-title display-block tc-grey-700">Комментарии</span>
+		</div>
+		<div flex-container="row">
+			<div flex-item="6">
+		        <lx-text-field label="Комментарий" fixed-label="true" icon="comment-text-outline">
+		            <input type="text" ng-model="comment">
+		        </lx-text-field>
+		    </div>
+		    <div flex-item="2">
+		        <button style="margin-top: 10px;" class="btn btn--s btn--blue btn--raised" lx-ripple ng-click="SendComment()">Отправить</button>
+		    </div>		    
+		</div>
+    	<div class="p++" style="padding-bottom: 0px !important;"  ng-repeat="comm in comments | reverse">
+    		<div style="max-width: 60%;">
+    			<div>
+	    			<i class="icon icon--m icon--blue icon--flat mdi mdi-account"></i>
+	    			<span style="line-height: 40px;" class="fs-title tc-grey-800">{{comm.username}}</span>
+	    		</div>
+	    		<div class="bgc-grey-200 p+" style="border-radius: 5px;">
+	    			{{comm.message}}
+	    		</div>
+    		</div>
+    	</div>
+    	<div class="p++"></div>
+	
+    </div>
+
+    <div class="dialog__actions">
+
+    </div>
+</lx-dialog>
 
 </body>
 </html>

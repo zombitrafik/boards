@@ -4,10 +4,11 @@ var mongojs = require('mongojs');
 var path = require('path');
 var bodyParser = require('body-parser');
 //dbs
-var dbBoards = mongojs('boards', ['boards']),
-	dbLists  = mongojs('lists', ['lists']),
-	dbCards  = mongojs('cards', ['cards']),
-	dbUsers  = mongojs('users', ['users']);
+var dbBoards   = mongojs('boards', ['boards']),
+	dbLists    = mongojs('lists', ['lists']),
+	dbCards    = mongojs('cards', ['cards']),
+	dbUsers    = mongojs('users', ['users']),
+	dbComments = mongojs('comments', ['comments']);
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.json());
@@ -26,15 +27,34 @@ app.get('/boards/:id', function (req, res) {
 	});
 });
 
+app.get('/boardsByProject/:id', function (req, res) {
+	var id = req.params.id;
+	dbBoards.boards.findOne({"_id":mongojs.ObjectId(id)},function (err, doc) {
+		var user_id = doc["user_id"];
+			dbBoards.boards.find({"user_id":user_id},function (err, docs) {
+			res.json(docs);
+		});
+	});
+});
+
 app.post('/boards', function (req, res) {
 	dbBoards.boards.insert(req.body, function (err, doc) {
 		res.json(doc);
 	});
 });
 
+app.get('/project/:id', function (req, res) {
+	var id = req.params.id;
+	dbBoards.boards.findOne({"_id":mongojs.ObjectId(id)},function (err, doc) {
+		res.json(doc);
+	});
+})
+
 // LISTS
-app.get('/lists', function (req, res) {
-	dbLists.lists.find(function (err, docs) {
+app.get('/lists/:id', function (req, res) {
+	var project_id = req.params.id;
+
+	dbLists.lists.find({"project_id":project_id}, function (err, docs) {
 		res.json(docs);
 	});
 });
@@ -68,6 +88,13 @@ app.put('/lists/:id', function (req, res) {
 });
 
 // CARDS
+app.get('/card/:id', function (req, res) {
+	var id = req.params.id;
+	dbCards.cards.findOne({"_id":mongojs.ObjectId(id)}, function (err, doc) {
+		res.json(doc);
+	});
+});
+
 app.get('/cards', function (req, res) {
 	dbCards.cards.find(function (err, docs) {
 		res.json(docs);
@@ -126,17 +153,44 @@ app.post('/register', function (req, res) {
 	var login = req.body.login;
 	var password = req.body.password;
 	var confirm_password = req.body.confirm_password;
+	var first_name = req.body.first_name;
+	var second_name = req.body.second_name;
 	dbUsers.users.findOne({"login": login}, function (err, doc) {
 		if(doc!=null) {
 			res.json(null);
 			return;
 		}else{
-			dbUsers.users.insert({"login": login, "password": password}, function (err, doc) {
+			dbUsers.users.insert({"login": login, "password": password, "first_name": first_name, "second_name": second_name}, function (err, doc) {
 				res.json(doc);
 			});
 		}
 	});
 });
+
+
+app.get('/userByProject/:id', function (req, res) {
+	var project_id = req.params.id;
+	dbBoards.boards.findOne({"_id":mongojs.ObjectId(project_id)},function (err, doc) {
+		dbUsers.users.findOne({"_id": mongojs.ObjectId(doc["user_id"])}, function (err, doc) {
+			res.json(doc);
+		});
+	});
+});
+
+//COMMENTS
+
+app.get('/comments/:id', function (req, res) {
+	var card_id = req.params.id;
+	dbComments.comments.find({"card_id": card_id}, function (err, docs) {
+		res.json(docs)
+	});
+})
+
+app.post('/comment', function (req, res) {
+	dbComments.comments.insert(req.body, function (err, docs) {
+		res.json(docs)
+	});
+})
 
 
 app.listen(3000);
