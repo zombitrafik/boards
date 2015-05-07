@@ -1,5 +1,11 @@
 var app = angular.module('app', ['lumx']);
 
+app.filter('reverse', function() {
+  return function(items) {
+    return items.slice().reverse();
+  };
+});
+
 app.controller('BoardsController', function ($scope, $http, LxDialogService) {
 	$scope.user_id = window.location.search.split('=')[1];
 	getMyBoards();
@@ -7,7 +13,6 @@ app.controller('BoardsController', function ($scope, $http, LxDialogService) {
 	$scope.GoToProject = function (id) {
 		window.location = "project.html?id="+id;
 	};
-
 
 	$scope.CreateProject = function () {
 		if($scope.title.trim()=="") return;
@@ -95,7 +100,9 @@ app.controller('RegisterController', function ($scope, $http) {
 		var req = {
 			login: $scope.auth.login,
 			password: $scope.auth.password,
-			confirm: $scope.auth.confirm_password
+			confirm: $scope.auth.confirm_password,
+			first_name: $scope.auth.first_name,
+			second_name: $scope.auth.second_name
 		}
 		$http.post('/register', req).success(function (response) {
 			if(response == null){
@@ -109,14 +116,63 @@ app.controller('RegisterController', function ($scope, $http) {
 });
 
 
-app.controller('myCtrl', function ($scope, $http) {
+app.controller('myCtrl', function ($scope, $http, LxDialogService) {
+	$scope.project_id = window.location.search.split('=')[1];
+
+	ProjectSettings();
+
+	function ProjectSettings () {
+		$http.get('/project/'+$scope.project_id).success(function (request) {
+			$scope.project_color = request["color"];
+		});
+		$http.get('/userByProject/'+$scope.project_id).success(function (request) {
+			$scope.user_name = request["first_name"] + " " + request["second_name"];
+		});
+	}
 
 	function loadBoards () {
-		$http.get('/boards').success(function (request) {
+		$http.get('/boardsByProject/'+$scope.project_id).success(function (request) {
 			$scope.boards = request;
 		});
 	};
-	
+
+	$scope.GoToProject = function (id) {
+		window.location = "project.html?id="+id;
+	};
+
+	$scope.OpenCard = function (id) {
+		$http.get('/card/' + id).success(function (request) {
+			console.log(request);
+			$scope.card_info = request;
+			LoadComments(id);
+			LxDialogService.open('card');
+		});
+	};
+
+	$scope.SendComment = function () {
+		var card_id = $scope.card_info._id;
+		var message = $scope.comment;
+		if(message.trim()=="") return;
+		message = message.trim();
+		var username = $scope.user_name;
+		var req = {
+			card_id: card_id,
+			message: message,
+			username: username
+		}
+		$http.post('/comment', req).success(function (response) {
+			$scope.comment = "";
+			console.log(response);
+			LoadComments(card_id);
+		});
+	};
+
+	function LoadComments (id) {
+		$http.get('/comments/'+id).success(function (response) {
+			$scope.comments = response;
+		});
+	};
+
 	loadBoards();
 
 	function BubbleSort(A)       // A - массив, который нужно
@@ -135,7 +191,7 @@ app.controller('myCtrl', function ($scope, $http) {
 		var lists = [];
 		lists = $scope.lists;
 		// загрузка списов
-		$http.get('/lists').then(function (request) {
+		$http.get('/lists/'+$scope.project_id).then(function (request) {
 			var templists = request["data"];
 			lists = BubbleSort(templists);
 			// загрузка карточек
@@ -639,7 +695,8 @@ app.controller('myCtrl', function ($scope, $http) {
 			desc: "Новое описание",
 			board_id: "id3",
 			cards: [],
-			position: pos
+			position: pos,
+			project_id: $scope.project_id
 		}
 		$http.post('/lists', req).success(function (response) {
 			loadLists();

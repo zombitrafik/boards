@@ -25,6 +25,20 @@
                 <strong class="fs-headline display-block">Регистрация</strong>
 
                 <div class="paragraph fs-body-1 mt+">
+                	<div flex-container="row">
+					    <div flex-item>
+					        <lx-text-field label="Имя" fixed-label="true" icon="chevron-right">
+					            <input type="text" ng-model="auth.first_name">
+					        </lx-text-field>
+					    </div>
+					</div>
+					<div flex-container="row">
+					    <div flex-item>
+					        <lx-text-field label="Фамилия" fixed-label="true" icon="chevron-right">
+					            <input type="text" ng-model="auth.second_name">
+					        </lx-text-field>
+					    </div>
+					</div>
                     <div flex-container="row">
 					    <div flex-item>
 					        <lx-text-field label="Логин" fixed-label="true" icon="account">
