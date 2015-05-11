@@ -340,7 +340,7 @@ app.delete('/checkboxes/:id', function (req, res) {
 
 app.get('/activity/:id', function (req, res) {
 	var id = req.params.id;
-	dbActivity.activity.find().sort({_id:-1}).limit(20, function (err, docs) {
+	dbActivity.activity.find({project_id: id}).sort({_id:-1}).limit(20, function (err, docs) {
 		res.json(docs)
 	});
 });

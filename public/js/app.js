@@ -161,7 +161,9 @@ app.controller('myCtrl', function ($scope, $http, LxDialogService, $filter) {
 
 	$scope.$watch('card_info.date', function (newValue, oldValue) {
 		if($scope.card_info==null) return;
-		if(oldValue==undefined) return;
+		if(newValue == oldValue) return;
+		//if(oldValue==undefined) return;
+		console.log("new date " + newValue);
 		$http.put('/card_date/'+$scope.card_info._id, {date: $scope.card_info.date}).success(function (response) {
 			// SOCKET
 			socket.emit('card_date', {
@@ -273,7 +275,6 @@ app.controller('myCtrl', function ($scope, $http, LxDialogService, $filter) {
 	function LoadCheckboxes () {
 		$scope.task = [];
 		$http.get('/checkboxes/'+$scope.card_info._id).success(function (response) {
-			console.log(response);
 			if(response==null) return;
 			$scope.card_info["checkboxes"] = response;
 			$scope.card_info["percent"] = CalcTaskPercent();
@@ -1100,7 +1101,8 @@ app.controller('myCtrl', function ($scope, $http, LxDialogService, $filter) {
 			comment_count: 0,
 			list_id: id,
 			position: pos,
-			full_desc: ""
+			full_desc: "",
+			date: new Date()
 		}
 		$http.post('/cards', req).success(function (response) {
 			loadLists();
@@ -1237,7 +1239,7 @@ app.controller('myCtrl', function ($scope, $http, LxDialogService, $filter) {
 		$scope.card_info["checkboxes"] = null;
 		$scope.card_info["percent"] = 0;
 		setTimeout(function () {
-			$(window).resize();
+			//$(window).resize();
 		}, 0);
 		console.log("MESSAGE " + obj.msg);
 	});
