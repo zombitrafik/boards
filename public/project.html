@@ -13,7 +13,7 @@
 	<script src="js/moment_with_locales.js"></script>
 	<script src="js/jquery.shapeshift.min.js"></script>
 	<script src="js/lumx.js"></script>
-
+	<script src="js/socket.io.js"></script>
 	<script src="js/app.js"></script>
 
 
@@ -109,21 +109,51 @@
 	    }
 
 	    .right_sidebar > div {
-	    	width: 250px;
+	    	width: 320px;
 	        height: 85vh;
 	    }
-
+	    .round {
+		border-radius: 3px;
+		}
+		.round:hover {
+			opacity: 0.9;
+			cursor: pointer;
+		}
     </style>
 </head>
 <body ng-controller="myCtrl">
+<!-- SOCKET.IO -->
+
+
+
 
 <div class="header bgc-{{project_color}}-600" style="text-align: center;">
 	<button style="float: left;" class="btn btn--m btn--{{project_color}} btn--raised" ng-click="toggleBoards()" lx-ripple><i class="mdi mdi-view-list"></i>&nbsp;Проекты</button>
 	<span class="fs-headline tc-{{project_color}}-200">BOARDS</span>
 
 	<div style="float: right;">
-		<button class="btn btn--m btn--white btn--icon" lx-ripple><i class="mdi mdi-plus"></i></button>
-		<button class="btn btn--m btn--{{project_color}} btn--raised" lx-ripple>&nbsp;{{user_name}}</button>
+
+		<lx-dropdown>
+			<button class="btn btn--m btn--white btn--icon" lx-ripple lx-dropdown-toggle>
+				<i class="mdi mdi-plus"></i>
+			</button>
+
+		    <lx-dropdown-menu>
+		        <ul>
+		            <li>
+		            	<li><a href="#" ng-click="CreateProjectFromProject()" class="dropdown-link">Создать проект...</a></li>
+		            </li>
+		        </ul>
+		    </lx-dropdown-menu>
+		</lx-dropdown>
+		
+
+		<button class="btn btn--m btn--{{project_color}} btn--raised tc-white" lx-ripple>
+	        {{user_name}}
+	    </button>
+
+	    <button class="btn btn--m btn--white btn--icon" lx-ripple ng-click="LogOut()"><i class="mdi mdi-exit-to-app"></i></button>
+
 	</div>
 </div>
 
@@ -144,23 +174,29 @@
 	<div class="card" >
 
 		<div style="padding-right: 30px; position: relative; left: 0px; top: 0px;">
-			<lx-text-field label="Название проекта" fixed-label="true" icon="magnify">
-	            <input type="text" ng-model="textFields.fixedFirstName">
-	        </lx-text-field>
 	    </div>
 	    <div style="position: absolute; left: 90%; top: -5px;">
 			<button class="btn btn--m btn--grey btn--icon" ng-click="toggleBoards()" lx-ripple><i class="mdi mdi-close"></i></button>
 		</div>
 		
-		<!-- BOARDS -->
-		<span class="fs-subhead tc-blue-400 display-block" style="text-align: center;">Мои проекты</span>
-		<div class="divider divider--dark"></div>
+		
 
 		<!-- ITEMS -->
 		<div style="max-height: 80%;" lx-scrollbar>
+			<!-- MY -->
+			<!-- BOARDS -->
+			<span class="fs-subhead tc-blue-400 display-block" style="text-align: center;">Мои проекты</span>
+			<div class="divider divider--dark"></div>
 			<div class="p+">
-				<button class="btn btn--m btn--{{board.color}} btn--raised" style="width: 100%;" lx-ripple ng-repeat-start="board in boards" ng-click="GoToProject(board._id)">{{board.title}}</button>
+				<button class="btn btn--m btn--{{board.color}} btn--raised" style="width: 100%;" lx-ripple ng-repeat-start="board in boards" ng-click="GoToProject(board._id, 't')">{{board.title}}</button>
 				<div class="divider divider--dark" style="margin: 5px;" ng-repeat-end></div>
+			</div>
+			<span class="fs-subhead tc-blue-400 display-block" style="text-align: center;">Работаю в проектах</span>
+			<div class="divider divider--dark"></div>
+			<!-- ACCESS -->
+			<div class="p+">
+				<button class="btn btn--m btn--{{board.color}} btn--raised" style="width: 100%;" lx-ripple ng-repeat-start="board in accessBoards" ng-if-start="board.user_id != user_id" ng-click="GoToProject(board._id, 'f')">{{board.title}}</button>
+				<div class="divider divider--dark" style="margin: 5px;" ng-if-end ng-repeat-end></div>
 			</div>
 		</div>
 
@@ -169,8 +205,47 @@
 
 <!-- RIGHT SIDEBAR -->
 <div class="right_sidebar">
-	<div class="card">
+	<div class="card" style="position: relative; max-height: 85vh;" lx-scrollbar>
+		<div style="position: absolute; left: 0px; top: 0px;">
+			<button class="btn btn--s btn--black btn--flat" ng-click="toggleRightMenu()" lx-ripple><i class="mdi mdi-close"></i></button>
+		</div>
+		<div flex-item ng-if="is_leader==true" style="margin-left: 10%;width: 80%;">
+	        <lx-select change="changeProjectMembers(newValue, oldValue)" ng-model="all_people_selected" placeholder="Пользователи" choices="all_people" multiple floating-label>
+	            <lx-select-selected>
+	                {{ $selected.first_name }} {{ $selected.second_name }}
+	            </lx-select-selected>
 
+	            <lx-select-choices>
+	                {{ $choice.first_name }} {{ $choice.second_name }}
+	            </lx-select-choices>
+	        </lx-select>
+	    </div>
+
+	    <div class="p++">
+	    	<span class="fs-subhead display-block tc-grey-600" style="text-align: center;">Сменить цвет проекта</span>
+	    </div>
+
+	    <div class="tc-white-1 p+" flex-container="row" flex-gutter="24" style="margin-top: -30px; min-">
+
+		    <div flex-item="2"><div ng-click="SetNewProjectColor('red')" class="round p+ bgc-red-500" style="position: relative;"></div></div>
+		    <div flex-item="2"><div ng-click="SetNewProjectColor('blue')" class="round p+ bgc-blue-500" style="position: relative;"></div></div>
+		    <div flex-item="2"><div ng-click="SetNewProjectColor('green')" class="round p+ bgc-green-500" style="position: relative;"></div></div>
+		    <div flex-item="2"><div ng-click="SetNewProjectColor('purple')" class="round p+ bgc-purple-500" style="position: relative;"></div></div>
+		    <div flex-item="2"><div ng-click="SetNewProjectColor('orange')" class="round p+ bgc-orange-500" style="position: relative;"></div></div>
+		    <div flex-item="2"><div ng-click="SetNewProjectColor('grey')" class="round p+ bgc-grey-500" style="position: relative;"></div></div>
+		</div>
+		<div class="p++">
+	    	<span class="fs-subhead display-block tc-grey-600" style="text-align: center;">Последняя активность в проекте</span>
+	    </div>
+	    <hr>
+		<div ng-repeat="active in activity" style="padding: 4px; margin-left: 5px;">
+			<b class="tc-grey-700">{{active.body.username}}</b> <span class="fs-body-2"> {{active.body.message}}</span> 
+		</div>
+		<hr>
+		<div class="p+" id="loadAA" >
+			<button  style="margin: 0px auto; width: 100%;" class="btn btn--s btn--blue btn--flat" ng-click="LoadAllActivity()" lx-ripple>Загрузить всю активность</button>
+		</div>
+		<div class="p+"></div>
 	</div>
 </div>
 
@@ -207,20 +282,9 @@
 						 	
 						    <div class="card" ng-repeat="card in list.cards" ng-click="OpenCard(card._id)">
 						    		<div class="toolbar__right" style="position: absolute; margin-left: 88%;">
-							            <lx-dropdown position="right" from-top>
-							                <button class="btn btn--s btn--grey btn--icon" lx-ripple lx-dropdown-toggle>
-							                    <i class="mdi mdi-pencil"></i>
-							                </button>
-
-							                <lx-dropdown-menu  class="bgc-grey-400">
-							                    <ul >
-							                        <li><a class="dropdown-link">Пользователи</a></li>
-							                        <li><a class="dropdown-link">Установить дату</a></li>
-							                        <li class="dropdown-divider"></li>
-							                        <li><a class="dropdown-link" ng-click="deleteCard(card._id)">Удалить</a></li>
-							                    </ul>
-							                </lx-dropdown-menu>
-							            </lx-dropdown>
+						                <button class="btn btn--s btn--grey btn--icon" ng-click="deleteCard(card._id)">
+						                    <i class="mdi mdi-close"></i>
+						                </button>
 							        </div>
 			    	            <div style="padding: 8px;">
 					
@@ -275,7 +339,7 @@
 
 
 <!-- OPEN CARD DIALOG -->
-<lx-dialog class="dialog dialog--l" id="card" auto-close="true" onclose="closingDialog()" onscrollend="scrollEndDialog()">
+<lx-dialog class="dialog dialog--l" id="card" auto-close="true" onclose="closingDialog()">
     <div class="dialog__header">
         <div class="toolbar bgc-light-blue-500 pl++">
             <span class="toolbar__label tc-white fs-title">
@@ -291,17 +355,76 @@
     </div>
 
     <div class="dialog__content bgc-grey-300" style="position: relative;">
-		<div style="position:absolute;right:0px;top:0px; width: 35%;" flex-container="column">
-			<span class="fs-subhead display-block tc-grey-500" style="text-align: center;">Добавить</span>
-			<button style="margin: 5px auto; width: 80%; text-align: left;" class="btn btn--m btn--white btn--raised tc-grey-700" lx-ripple><i style="float: left;margin-left: 5px;" class="icon icon--s icon--grey icon--flat mdi mdi-account-multiple"></i><b>&nbsp;&nbsp;&nbsp;Пользователи</b></button>
-			<button style="margin: 5px auto; width: 80%; text-align: left;" class="btn btn--m btn--white btn--raised tc-grey-700" lx-ripple><i style="float: left;margin-left: 5px;" class="icon icon--s icon--grey icon--flat mdi mdi-format-list-bulleted"></i><b>&nbsp;&nbsp;&nbsp;Списки</b></button>
-			<button style="margin: 5px auto; width: 80%; text-align: left;" class="btn btn--m btn--white btn--raised tc-grey-700" lx-ripple><i style="float: left;margin-left: 5px;" class="icon icon--s icon--grey icon--flat mdi mdi-timer"></i><b>&nbsp;&nbsp;&nbsp;Дату</b></button>
+    	<div style="position:absolute;right:0px;top:0px; width: 35%;" flex-container="column">
+			
+			<div flex-item style="width: 80%; margin: 0px auto;">
+		        <lx-select change="setCardMembers(newValue)" ng-model="selects.selectedPersons" placeholder="Пользователи" choices="people" multiple floating-label>
+		            <lx-select-selected>
+		                {{ $selected.first_name }} {{ $selected.second_name }}
+		            </lx-select-selected>
+
+		            <lx-select-choices>
+		            	{{ $choice.first_name }} {{ $choice.second_name }}
+		            </lx-select-choices>
+		        </lx-select>
+		    </div>
+
+			<!--<button style="margin: 5px auto; width: 80%; text-align: left;" class="btn btn--m btn--white btn--raised tc-grey-700" lx-ripple><i style="float: left;margin-left: 5px;" class="icon icon--s icon--grey icon--flat mdi mdi-account-multiple"></i><b>&nbsp;&nbsp;&nbsp;Пользователи</b></button>-->
+			<button ng-if="card_info.checkboxes == null" style="margin: 5px auto; width: 80%; text-align: left;" ng-click="CreateCheckboxes()" class="btn btn--m btn--white btn--raised tc-grey-700" lx-ripple><i style="float: left;margin-left: 5px;" class="icon icon--s icon--grey icon--flat mdi mdi-format-list-bulleted"></i><b>&nbsp;&nbsp;&nbsp;Списки</b></button>
+			<lx-date-picker style="width: 80%; margin: 0px auto;" model="card_info.date" label="Назначить дату" locale="ru" fixed-label="true" icon="calendar"></lx-date-picker>
 			<span class="fs-subhead display-block tc-grey-500" style="text-align: center;">Действия</span>
-			<button style="margin: 5px auto; width: 80%; text-align: left;" class="btn btn--m btn--white btn--raised tc-grey-700" lx-ripple><i style="float: left;margin-left: 5px;" class="icon icon--s icon--grey icon--flat mdi mdi-delete"></i><b>&nbsp;&nbsp;&nbsp;Удалить</b></button>
+			<button style="margin: 5px auto; width: 80%; text-align: left;" class="btn btn--m btn--white btn--raised tc-grey-700" lx-ripple lx-dialog-close ng-click="deleteCard(card_info._id)"><i style="float: left;margin-left: 5px;" class="icon icon--s icon--grey icon--flat mdi mdi-delete"></i><b>&nbsp;&nbsp;&nbsp;Удалить</b></button>
 		</div>
         <div class="p++" flex-container="row" flex-gutter="24">
         	<span class="fs-title display-block tc-grey-700">Описание</span>
+        	<div>
+        		<button class="btn btn--xs btn--green btn--flat tc-grey-700" ng-click="EditDescription()" ><i class="icon icon--s icon--white icon--flat mdi mdi-tooltip-edit"></i><b>Изменить</b></button>
+        	</div>
 		</div>
+		<div style="margin: 12px; margin-top: -25px; max-width: 60%;">
+        	<span id="not_edit_block" class="fs-body-2 display-block tc-grey-700">{{card_info.full_desc}}</span>
+			<div id="edit_block" style="display: none;">
+				<lx-text-field label="Описание">
+		            <input type="text" ng-model="temp_full_desc">
+		        </lx-text-field>
+		        <div style="float: right;">
+			        <button class="btn btn--s btn--blue btn--raised" ng-click="EditDescription()" >Отмена</button>
+			        <button class="btn btn--s btn--green btn--raised" ng-click="SaveNewDescription()" ><b>Сохранить</b></button>
+				</div>
+			</div>
+
+		</div>
+		
+
+
+
+		<div class="p++" style="max-width: 65%;" ng-if="card_info.checkboxes != null" flex-gutter="24">
+			<span class="fs-title display-block tc-grey-700">Список заданий <span class="fs-body-2 tc-green-500" style="float: right;">Выполнено: {{card_info.percent}}%<br />
+				<button class="btn btn--xs btn--red btn--raised" ng-click="RemoveTask()" ><i class="mdi mdi-delete"></i>&nbsp;&nbsp;&nbsp;Удалить список</button>
+			</span></span>
+			
+			<div class="p+">
+				<div class="checkbox" ng-repeat="item in card_info.checkboxes.items">
+				    <input ng-click="ApplyCheckboxes($index)" type="checkbox" id="checkbox{{$index}}" class="checkbox__input" ng-checked="{{item.complete}}">
+				    <label for="checkbox{{$index}}" class="checkbox__label">
+				    	<span class="fs-subhead display-block tc-grey-500" ng-if="item.complete == true"><s>{{item.title}}</s></span>
+				    	<span class="fs-subhead display-block tc-grey-900" ng-if="item.complete == false">{{item.title}}</span>
+				    </label>
+				</div>
+			</div>
+			<div class="p++" style="margin-top: -30px;">
+				<lx-text-field label="Новое задание..." fixed-label="true">
+		            <input type="text" ng-model="task.title">
+		        </lx-text-field>
+			    <button class="btn btn--s btn--green btn--raised" ng-click="AddNewTask()" ><b>Добавить</b></button>
+				
+			</div>
+		</div>
+
+
+
+
+
 		<div class="p++" flex-container="row" flex-gutter="24">
         	<span class="fs-title display-block tc-grey-700">Комментарии</span>
 		</div>
@@ -321,7 +444,7 @@
 	    			<i class="icon icon--m icon--blue icon--flat mdi mdi-account"></i>
 	    			<span style="line-height: 40px;" class="fs-title tc-grey-800">{{comm.username}}</span>
 	    		</div>
-	    		<div class="bgc-grey-200 p+" style="border-radius: 5px;">
+	    		<div class="bgc-grey-200" style="border-radius: 5px; padding: 4px;">
 	    			{{comm.message}}
 	    		</div>
     		</div>
@@ -334,6 +457,7 @@
 
     </div>
 </lx-dialog>
+
 
 </body>
 </html>

@@ -37,13 +37,23 @@
 	<i class="icon icon--m icon--grey icon--flat mdi mdi-account-outline"></i><span class="tc-grey-800 fs-headline"> Мои проекты</span>
 	
 	<div style="padding: 20px;" flex-wrap="wrap" flex-container="row">
-		<div flex-item="3" class="board bgc-{{board.color}}-500" ng-repeat="board in boards" ng-click="GoToProject(board._id)">
+		<div flex-item="3" class="board bgc-{{board.color}}-500" ng-repeat="board in boards" ng-click="GoToProject(board._id, 't')">
 			<p style="text-align: center; line-height: 110px;" class="tc-grey-200">{{board.title}}</p>
 		</div>
 		<div flex-item="3" class="board bgc-grey-400" ng-click="opendDialog('test')">
 			<p class="tc-grey-700" style="text-decoration: underline; line-height: 110px; text-align: center;"><b>Создать проект</b></p>
 		</div>
 	</div>
+
+	<i class="icon icon--m icon--grey icon--flat mdi mdi-account-multiple-plus"></i><span class="tc-grey-800 fs-headline"> Работаю в проектах</span>
+	
+	<div style="padding: 20px;" flex-wrap="wrap" flex-container="row">
+		<div flex-item="3" class="board bgc-{{board.color}}-500" ng-if="board.user_id != user_id" ng-repeat="board in accessBoards" ng-click="GoToProject(board._id, 'f')">
+			<p style="text-align: center; line-height: 110px;" class="tc-grey-200">{{board.title}}</p>
+		</div>
+	</div>
+
+	
 
 <!-- DIALOG WINDOW -->
 
